@@ -256,18 +256,20 @@ def plot_naive(x, y, plot_size=(420, 420)):
     canvas_1 = x_m + canvas_1*(1-x_m)
     class_0_pixels = np.where(canvas_0 > x_m)
     class_1_pixels = np.where(canvas_1 > x_m)
-    plot[class_0_pixels[0], class_0_pixels[1]] = np.concatenate(
-        [[[1] for i in range(len(class_0_pixels[0]))],
-         1 - canvas_0[class_0_pixels[0], class_0_pixels[1]][..., None],
-         1 - canvas_0[class_0_pixels[0], class_0_pixels[1]][..., None]],
-        axis=-1
-    )
-    plot[class_1_pixels[0], class_1_pixels[1]] = np.concatenate(
-        [1 - canvas_1[class_1_pixels[0], class_1_pixels[1]][..., None],
-         1 - canvas_1[class_1_pixels[0], class_1_pixels[1]][..., None],
-         [[1] for i in range(len(class_1_pixels[0]))]],
-        axis=-1
-    )
+    if len(class_0_pixels[1]) > 0:
+        plot[class_0_pixels[0], class_0_pixels[1]] = np.concatenate(
+            [[[1] for i in range(len(class_0_pixels[0]))],
+             1 - canvas_0[class_0_pixels[0], class_0_pixels[1]][..., None],
+             1 - canvas_0[class_0_pixels[0], class_0_pixels[1]][..., None]],
+            axis=-1
+        )
+    if len(class_1_pixels[1]) > 0:
+        plot[class_1_pixels[0], class_1_pixels[1]] = np.concatenate(
+            [1 - canvas_1[class_1_pixels[0], class_1_pixels[1]][..., None],
+             1 - canvas_1[class_1_pixels[0], class_1_pixels[1]][..., None],
+             [[1] for i in range(len(class_1_pixels[0]))]],
+            axis=-1
+        )
 
     return (255*plot).astype(np.uint8)
 
@@ -548,4 +550,4 @@ def compare_gt_stats(original_path, path_to_compare):
             string_list.append("%s,%s,%s,%s,%s,%s" % (name, tp, fp, tn, fn, n_pix))
         f.write("\n".join(string_list))
 
-compare_gt_stats("/media/shared_storage/datasets/syncrack_dataset_v3", "/media/shared_storage/datasets/syncrack_dataset_v3")
+# compare_gt_stats("/media/shared_storage/datasets/syncrack_dataset_v3", "/media/shared_storage/datasets/syncrack_dataset_v3")
