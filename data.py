@@ -948,8 +948,51 @@ def calculate_thresholded_dsc_from_image_folder(folder_path):
     with open(results_file, "w") as f:
         f.write("".join(lines))
 
-# calculate_thresholded_dsc_from_image_folder("/media/shared_storage/google-drive/ESIEE/Thesis/Year_2/results_weakly_supervision/results_march/results_removing/results_corrected/i3/results_validation_min_val_loss")
 
+def calculate_tolerant_scores_from_image_folder(folder_path, tolerance=2):
+    results_folder = "results_tolerant"
+    folder_root = os.path.split(folder_path)[0]
+    if not os.path.exists(results_folder):
+        os.makedirs(os.path.join(folder_root, results_folder))
+    image_names = sorted([os.path.join(folder_path, f) for f in os.listdir(folder_path)
+                          if not f.startswith(".") and (f.endswith(".png") or f.endswith(".jpg"))],
+                         key=lambda f: f.lower())
+    se = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(2*tolerance + 1, 2*tolerance + 1))
+    scores = np.zeros((len(image_names), 2), dtype=np.float)
+    for i, path in enumerate(image_names):
+        print("\rImages processed: %s/%s" % (i, len(image_names)), end='')
+
+        or_im = cv2.imread(path).astype(np.float)
+        h, w, c = or_im.shape
+        w = int(w / 3)
+
+        gt = np.where(or_im[:, w:2 * w, 0] / 255.0 >= 0.5, 1.0, 0.0)
+        tolerant_gt = cv2.dilate(gt,se, borderType=cv2.BORDER_REFLECT_101)
+        pred = np.where(or_im[:, 2 * w:, 0] / 255.0 >= 0.5, 1.0, 0.0)
+
+        tp = pred*tolerant_gt
+        fp = pred - tp
+        fn = np.maximum(0, (1 - pred) - (1 - gt))
+
+        output_image = np.concatenate((fn[..., None], tp[..., None], fp[..., None]), axis=-1)
+        cv2.imwrite(os.path.join(folder_root, results_folder, os.path.split(path)[-1]), 255*output_image)
+
+        pr = np.sum(tp) / (np.sum(tp) + np.sum(fp))
+        re = np.sum(tp) / (np.sum(tp) + np.sum(fn))
+
+        scores[i] = [pr, re]
+    print("\rImages processed: %s/%s" % (i + 1, len(image_names)))
+
+    averages = np.average(scores, axis=0)
+
+    with open(os.path.join(folder_root, results_folder, "results.txt"), "w+") as f:
+        f.write("\n".join(
+            ["{}: {:.4f}".format("precision", averages[0]),
+             "{}: {:.4f}".format("recall", averages[1]),
+             "{}: {:.4f}".format("f-measure", 2 * averages[0] * averages[1] / (averages[0] + averages[1]))
+             ]))
+
+calculate_tolerant_scores_from_image_folder("/media/shared_storage/google-drive/ESIEE/Thesis/Year_1/results_crack_detection/results_paper_IEEE/results_cfd_aigle-rn_5-nn/results_validation")
 
 def corrected_crop_generator(im, gt, corrected_gt, input_size):
     corners = get_corners(im, input_size)
