@@ -1,0 +1,15 @@
+__pycache*
+/.idea/
+/*.png
+/*.jpg
+/*.jpeg
+/*.hdf5
+/*.json
+/results*
+/*.txt
+/*.avi
+/*.mp4
+/training_histories
+/*.hyperopt
+/logs
+/test
