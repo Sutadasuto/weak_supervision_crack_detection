@@ -992,8 +992,6 @@ def calculate_tolerant_scores_from_image_folder(folder_path, tolerance=2):
              "{}: {:.4f}".format("f-measure", 2 * averages[0] * averages[1] / (averages[0] + averages[1]))
              ]))
 
-calculate_tolerant_scores_from_image_folder("/media/shared_storage/google-drive/ESIEE/Thesis/Year_1/results_crack_detection/results_paper_IEEE/results_cfd_aigle-rn_5-nn/results_validation")
-
 def corrected_crop_generator(im, gt, corrected_gt, input_size):
     corners = get_corners(im, input_size)
     for corner in corners:
