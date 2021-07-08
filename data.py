@@ -949,8 +949,12 @@ def calculate_thresholded_dsc_from_image_folder(folder_path):
         f.write("".join(lines))
 
 
+def calculate_scores_from_image_folder(folder_path):
+    calculate_tolerant_scores_from_image_folder(folder_path, tolerance=0)
+
+
 def calculate_tolerant_scores_from_image_folder(folder_path, tolerance=2):
-    results_folder = "results_tolerant"
+    results_folder = "results_tolerant_%s_pixels" % tolerance
     folder_root = os.path.split(folder_path)[0]
     if not os.path.exists(results_folder):
         os.makedirs(os.path.join(folder_root, results_folder))
@@ -958,7 +962,7 @@ def calculate_tolerant_scores_from_image_folder(folder_path, tolerance=2):
                           if not f.startswith(".") and (f.endswith(".png") or f.endswith(".jpg"))],
                          key=lambda f: f.lower())
     se = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(2*tolerance + 1, 2*tolerance + 1))
-    scores = np.zeros((len(image_names), 2), dtype=np.float)
+    matrix = np.zeros((4))
     for i, path in enumerate(image_names):
         print("\rImages processed: %s/%s" % (i, len(image_names)), end='')
 
@@ -967,29 +971,45 @@ def calculate_tolerant_scores_from_image_folder(folder_path, tolerance=2):
         w = int(w / 3)
 
         gt = np.where(or_im[:, w:2 * w, 0] / 255.0 >= 0.5, 1.0, 0.0)
-        tolerant_gt = cv2.dilate(gt,se, borderType=cv2.BORDER_REFLECT_101)
+        if tolerance > 0:
+            tolerant_gt = cv2.dilate(gt,se, borderType=cv2.BORDER_REFLECT_101)
+        else:
+            tolerant_gt = gt
         pred = np.where(or_im[:, 2 * w:, 0] / 255.0 >= 0.5, 1.0, 0.0)
 
         tp = pred*tolerant_gt
         fp = pred - tp
         fn = np.maximum(0, (1 - pred) - (1 - gt))
 
+        matrix[0] += np.sum(tp)
+        matrix[1] += np.sum(fp)
+        matrix[2] += np.sum(fn)
+        matrix[3] += (h * w - np.sum(tp) - np.sum(fp) - np.sum(fn))
+
         output_image = np.concatenate((fn[..., None], tp[..., None], fp[..., None]), axis=-1)
         cv2.imwrite(os.path.join(folder_root, results_folder, os.path.split(path)[-1]), 255*output_image)
 
-        pr = np.sum(tp) / (np.sum(tp) + np.sum(fp))
-        re = np.sum(tp) / (np.sum(tp) + np.sum(fn))
+        # pr = np.sum(tp) / (np.sum(tp) + np.sum(fp))
+        # re = np.sum(tp) / (np.sum(tp) + np.sum(fn))
 
-        scores[i] = [pr, re]
+        # scores[i] = [pr, re]
     print("\rImages processed: %s/%s" % (i + 1, len(image_names)))
 
-    averages = np.average(scores, axis=0)
+    # averages = np.average(scores, axis=0)
+    # with open(os.path.join(folder_root, results_folder, "results.txt"), "w+") as f:
+    #     f.write("\n".join(
+    #         ["{}: {:.4f}".format("precision", averages[0]),
+    #          "{}: {:.4f}".format("recall", averages[1]),
+    #          "{}: {:.4f}".format("f-measure", 2 * averages[0] * averages[1] / (averages[0] + averages[1]))
+    #          ]))
 
+    precision = matrix[0] / (matrix[0] + matrix[1])
+    recall = matrix[0] / (matrix[0] + matrix[2])
     with open(os.path.join(folder_root, results_folder, "results.txt"), "w+") as f:
         f.write("\n".join(
-            ["{}: {:.4f}".format("precision", averages[0]),
-             "{}: {:.4f}".format("recall", averages[1]),
-             "{}: {:.4f}".format("f-measure", 2 * averages[0] * averages[1] / (averages[0] + averages[1]))
+            ["{}: {:.4f}".format("precision", precision),
+             "{}: {:.4f}".format("recall", recall),
+             "{}: {:.4f}".format("f-measure", 2 * precision * recall / (precision + recall))
              ]))
 
 def corrected_crop_generator(im, gt, corrected_gt, input_size):
