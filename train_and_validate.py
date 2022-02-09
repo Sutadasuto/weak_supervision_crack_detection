@@ -216,7 +216,7 @@ def parse_args(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--dataset_names", type=str, nargs="+",
                         help="Must be one of: 'cfd', 'cfd-pruned', 'aigle-rn', 'esar', 'crack500', 'gaps384', "
-                             "'cracktree200', 'text'")
+                             "'cracktree200', 'syncrack', 'text'")
     parser.add_argument("-p", "--dataset_paths", type=str, nargs="+",
                         help="Path to the folders or files containing the respective datasets as downloaded from the "
                              "original source.")
