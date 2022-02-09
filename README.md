@@ -1,8 +1,12 @@
 # Weakly supervised crack detection (using U-VGG19 as backbone)
-Code used to produce the results presented in _insert our reference_ 
+Code used to produce the results presented in:
+```
+Rill-García, R., Dokládalová, E. and Doklédal, P., 2022. Pixel-accurate road crack detection in presence of inaccurate annotations. Neurocomputing.
+```
+If using this code, kindly cite the paper above.
 
 The code and documentation intended to use U-VGG19 as a pure supervised approach is available at: https://github.com/Sutadasuto/uvgg19_crack_detection
-The code and documentation for Syncrack is available at: https://github.com/Sutadasuto/syncrack_generator
+The code and documentation for Syncrack is available at: https://github.com/Sutadasuto/syncrack_generator. Notice that the version of Syncrack used for this paper is contained in a separate branch: https://github.com/Sutadasuto/syncrack_generator/tree/demo.
 
 ## Pre-requisites
 This repository was tested on two setups:
