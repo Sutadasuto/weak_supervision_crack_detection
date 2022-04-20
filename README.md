@@ -11,6 +11,7 @@ Code used to produce the results presented in:
     doi = {https://doi.org/10.1016/j.neucom.2022.01.051},
     url = {https://www.sciencedirect.com/science/article/pii/S0925231222000728},
     author = {Rodrigo Rill-García and Eva Dokladalova and Petr Dokládal},
+}    
 ```
 If using this code, kindly cite the paper above.
 
